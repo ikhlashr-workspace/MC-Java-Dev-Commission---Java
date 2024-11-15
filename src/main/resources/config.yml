@@ -1,18 +1,38 @@
+# General GUI Settings
+gui:
+  title: "&6Valkycraft Crypt" # Title for the GUI window
 
+# Submit Button Settings
+items:
+  submit_button:
+    material: "DIAMOND" # Item type for the submit button
+    custom_model_data: 1 # Custom model data for the submit button
+    name: "&aSubmit Crypt" # Name for the submit button
+    lore:
+      - "&7Click to submit your diamonds."
+      - "&7Earn money by depositing diamonds!"
+
+  valid_item:
+    material: "DIAMOND" # Material for the valid item (can be changed)
+    custom_model_data: 1 # Custom model data for the valid item
+    name: "&bSpecial Diamond" # Name for the valid item
+
+# Message Settings
 messages:
-  gui_title: "Submit Diamonds"  # Judul GUI
-  submit_button: "Submit"  # Nama tombol submit
-  no_diamonds: "Tidak ada crypt yang dikirimkan. Harap masukkan crypt terlebih dahulu."  # Pesan jika tidak ada crypt
-  submit_success: "You submitted %crypt% %valid_item_name% and received the equivalent balance."
-  reload_success: "Plugin configuration reloaded successfully."  # Pesan setelah reload konfigurasi
-  no_permission: "You do not have permission to reload this plugin."  # Pesan jika tidak punya hak akses
-  only_players: "Only players can use this command."  # Pesan jika bukan player
-  invalid_number: "Please enter a valid number."  # Pesan jika angka tidak valid
-  diamond_receive: "You have received %crypt% %valid_item_name%!"  # Pesan ketika menerima crypt
-  only_special_diamond: "Only %valid_item_name% can be inserted."  # Pesan jika bukan crypt khusus
+  no_diamonds_message: "&cYou need to add diamonds to the crypt!"
+  submit_success_message: "&aYou have submitted &b%crypt% &adiamonds to the crypt!"
+  reload_success_message: "&aPlugin configuration reloaded successfully!"
+  no_permission_message: "&cYou do not have permission to perform this action."
+  only_players_message: "&cThis command can only be used by players."
+  invalid_number_message: "&cPlease enter a valid number greater than 0."
+  diamond_receive_message: "&aYou received &b%crypt% &adiamonds!"
+  only_special_diamond_message: "&cYou can only add special diamonds to the crypt!"
 
+# Permissions (used in the command handler)
+permissions:
+  give: "valkycraft.give"
+  reload: "valkycraft.reload"
 
-diamond:
-  material: "DIAMOND"  # Material diamond yang digunakan
-  custom_model_data: 5000  # Custom Model Data untuk diamond
-  display_name: "Special Diamond"  # Display Name untuk diamond
+# Economy Command Configuration
+economy:
+  eco_command: "eco give" # Command for adding money to the player's balance (can be changed to other economy plugins)

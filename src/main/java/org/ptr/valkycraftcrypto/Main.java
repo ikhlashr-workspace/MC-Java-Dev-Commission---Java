@@ -1,6 +1,7 @@
 package org.ptr.valkycraftcrypto;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -15,9 +16,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class Main extends JavaPlugin implements Listener {
 
-    private Inventory gui;
     private String guiTitle;
     private String submitButtonText;
     private String noDiamondsMessage;
@@ -32,22 +37,12 @@ public class Main extends JavaPlugin implements Listener {
     private int validItemCustomModelData;
     private String validItemName;
 
-    private ItemStack createCustomItem() {
-        ItemStack customItem = new ItemStack(validItemMaterial);
-        ItemMeta meta = customItem.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(validItemName);
-            meta.setCustomModelData(validItemCustomModelData);
-            customItem.setItemMeta(meta);
-        }
-        return customItem;
-    }
+    // Multi-instance GUI mapping
+    private final Map<Player, Inventory> playerInventories = new HashMap<>();
 
     @Override
     public void onEnable() {
-        // Register event listener
         Bukkit.getPluginManager().registerEvents(this, this);
-        // Load configuration and messages
         loadConfig();
         getLogger().info("Plugin enabled!");
     }
@@ -61,7 +56,7 @@ public class Main extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equalsIgnoreCase("valkycraft")) {
             if (args.length == 0) {
-                sender.sendMessage("Usage: /valkycraft <open|reload|crypt>");
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "Usage: /valkycraft <open|reload|give>"));
                 return true;
             }
 
@@ -71,7 +66,7 @@ public class Main extends JavaPlugin implements Listener {
                     openCryptSubmitGUI(player);
                     return true;
                 } else {
-                    sender.sendMessage(onlyPlayersMessage);
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', onlyPlayersMessage));
                     return true;
                 }
             }
@@ -80,160 +75,203 @@ public class Main extends JavaPlugin implements Listener {
                 if (sender.hasPermission("valkycraft.reload")) {
                     reloadConfig();
                     loadConfig();
-                    sender.sendMessage(reloadSuccessMessage);
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', reloadSuccessMessage));
                     return true;
                 } else {
-                    sender.sendMessage(noPermissionMessage);
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', noPermissionMessage));
                     return false;
                 }
             }
 
-            if (args[0].equalsIgnoreCase("crypt")) {
-                if (sender instanceof Player) {
-                    Player player = (Player) sender;
-                    int jumlah = 1; // Default jumlah 1 jika tidak ada argumen kedua
-
-                    if (args.length > 1) {
-                        try {
-                            jumlah = Integer.parseInt(args[1]);
-                            if (jumlah <= 0) {
-                                player.sendMessage(invalidNumberMessage);
-                                return true;
-                            }
-                        } catch (NumberFormatException e) {
-                            player.sendMessage(invalidNumberMessage);
-                            return true;
-                        }
-                    }
-
-                    ItemStack customItem = createCustomItem();
-                    customItem.setAmount(jumlah);
-                    player.getInventory().addItem(customItem);
-
-                    player.sendMessage(diamondReceiveMessage.replace("%crypt%", String.valueOf(jumlah)).replace("%valid_item_name%", validItemName));
-                    return true;
-                } else {
-                    sender.sendMessage(onlyPlayersMessage);
-                    return true;
-                }
+            if (args[0].equalsIgnoreCase("give")) {
+                handleGiveCommand(sender, args);
+                return true;
             }
         }
-
         return false;
     }
 
-    private void openCryptSubmitGUI(Player player) {
-        gui = Bukkit.createInventory(null, 4 * 9, guiTitle);
+    private void handleGiveCommand(CommandSender sender, String[] args) {
+        if (sender instanceof Player) {
+            Player player = (Player) sender;
+            if (!player.hasPermission("valkycraft.give")) {
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', noPermissionMessage));
+                return;
+            }
 
-        // Set submit button in slot 16
-        ItemStack submitItem = new ItemStack(Material.EMERALD);
-        ItemMeta meta = submitItem.getItemMeta();
-        meta.setDisplayName(submitButtonText);
-        submitItem.setItemMeta(meta);
-        gui.setItem(16, submitItem);
+            int amount = 1;
+            if (args.length > 1) {
+                try {
+                    amount = Integer.parseInt(args[1]);
+                    if (amount <= 0) {
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', invalidNumberMessage));
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', invalidNumberMessage));
+                    return;
+                }
+            }
 
-        // Set valid item in slots 11-15
-        ItemStack validItem = createCustomItem();
-        for (int i = 11; i <= 15; i++) {
-            gui.setItem(i, validItem);
+            ItemStack customItem = createCustomItem();
+            customItem.setAmount(amount);
+            player.getInventory().addItem(customItem);
+
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', diamondReceiveMessage.replace("%crypt%", String.valueOf(amount))));
+        } else if (sender instanceof ConsoleCommandSender) {
+            ConsoleCommandSender console = (ConsoleCommandSender) sender;
+            if (args.length < 3) {
+                console.sendMessage("Usage: /valkycraft give <player> <amount>");
+                return;
+            }
+
+            Player target = Bukkit.getPlayer(args[1]);
+            if (target == null || !target.isOnline()) {
+                console.sendMessage("Player not found or offline.");
+                return;
+            }
+
+            try {
+                int amount = Integer.parseInt(args[2]);
+                if (amount <= 0) {
+                    console.sendMessage(invalidNumberMessage);
+                    return;
+                }
+
+                ItemStack customItem = createCustomItem();
+                customItem.setAmount(amount);
+                target.getInventory().addItem(customItem);
+
+                console.sendMessage("Successfully given " + amount + " items to " + target.getName() + ".");
+                target.sendMessage(ChatColor.translateAlternateColorCodes('&', diamondReceiveMessage.replace("%crypt%", String.valueOf(amount))));
+            } catch (NumberFormatException e) {
+                console.sendMessage(invalidNumberMessage);
+            }
         }
+    }
 
+    private void openCryptSubmitGUI(Player player) {
+        Inventory gui = Bukkit.createInventory(null, 4 * 9, ChatColor.translateAlternateColorCodes('&', guiTitle));
+
+        // Submit button
+        ItemStack submitItem = createSubmitButton();
+        gui.setItem(35, submitItem);
+
+        // Store player's GUI instance
+        playerInventories.put(player, gui);
         player.openInventory(gui);
+    }
+
+    private ItemStack createSubmitButton() {
+        ItemStack item = new ItemStack(Material.valueOf(getConfig().getString("items.submit_button.material")));
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta != null) {
+            meta.setCustomModelData(getConfig().getInt("items.submit_button.custom_model_data"));
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', submitButtonText));
+            List<String> lore = new ArrayList<>();
+            for (String line : getConfig().getStringList("items.submit_button.lore")) {
+                lore.add(ChatColor.translateAlternateColorCodes('&', line));
+            }
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getClickedInventory() == null) return;
         Player player = (Player) event.getWhoClicked();
+        Inventory gui = playerInventories.get(player);
 
         if (event.getView().getTopInventory().equals(event.getClickedInventory())) {
             int slot = event.getSlot();
-
-            // Allow only valid items in slots 11-15
             if (slot >= 11 && slot <= 15) {
                 ItemStack currentItem = event.getCursor();
                 if (currentItem != null && currentItem.getType() == validItemMaterial) {
                     ItemMeta meta = currentItem.getItemMeta();
                     if (meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == validItemCustomModelData) {
-                        event.setCancelled(false); // Allow valid item
+                        event.setCancelled(false);
                     } else {
                         event.setCancelled(true);
-                        player.sendMessage(onlySpecialDiamondMessage.replace("%valid_item_name%", validItemName));
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', onlySpecialDiamondMessage));
                     }
                 } else {
                     event.setCancelled(true);
-                    player.sendMessage(onlySpecialDiamondMessage.replace("%valid_item_name%", validItemName));
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', onlySpecialDiamondMessage));
                 }
-            }
-            if ((slot >= 0 && slot <= 10) || (slot >= 17 && slot <= 35)) {
+            } else if (slot == 35) {
                 event.setCancelled(true);
-            }
-
-            if (slot == 16 && event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.EMERALD) {
+                processSubmit(player, gui);
+            } else {
                 event.setCancelled(true);
-
-                int cryptCount = 0;
-
-                // Count the number of valid crypt items in slots 11-15
-                for (int i = 11; i <= 15; i++) {
-                    ItemStack item = gui.getItem(i);
-                    if (item != null && item.getType() == validItemMaterial) {
-                        cryptCount += item.getAmount();
-                        gui.clear(i);  // Clear the slot
-                    }
-                }
-
-                if (cryptCount == 0) {
-                    player.sendMessage(noDiamondsMessage); // No crypts added
-                } else {
-                    ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();
-                    String command = "eco give " + player.getName() + " " + cryptCount;
-                    Bukkit.dispatchCommand(console, command);
-
-                    // Replace the %crypt% and %valid_item_name% placeholders in the success message
-                    String successMessage = submitSuccessMessage
-                            .replace("%crypt%", String.valueOf(cryptCount))  // Replace %crypt% with the count
-                            .replace("%valid_item_name%", validItemName);   // Replace %valid_item_name% with the item name
-
-                    player.sendMessage(successMessage);
-                }
             }
         }
+    }
+
+    private void processSubmit(Player player, Inventory gui) {
+        int total = 0;
+        for (int i = 11; i <= 15; i++) {
+            ItemStack item = gui.getItem(i);
+            if (item != null && item.getType() == validItemMaterial) {
+                total += item.getAmount();
+                gui.setItem(i, null);
+            }
+        }
+
+        if (total == 0) {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', noDiamondsMessage));
+        } else {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "eco give " + player.getName() + " " + total);
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', submitSuccessMessage.replace("%crypt%", String.valueOf(total))));
+        }
+
+        player.closeInventory();
     }
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getInventory().equals(gui)) {
-            Player player = (Player) event.getPlayer();
+        Player player = (Player) event.getPlayer();
+        Inventory gui = playerInventories.get(player);
 
+        if (gui != null && event.getInventory().equals(gui)) {
             for (int i = 11; i <= 15; i++) {
                 ItemStack item = gui.getItem(i);
-                if (item != null && item.getType() == validItemMaterial) {
-                    ItemMeta meta = item.getItemMeta();
-                    if (meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == validItemCustomModelData) {
-                        player.getInventory().addItem(item);
-                    }
+                if (item != null) {
+                    player.getInventory().addItem(item);
                 }
             }
-
-            gui.clear();
+            playerInventories.remove(player);
         }
+    }
+
+    private ItemStack createCustomItem() {
+        ItemStack item = new ItemStack(validItemMaterial);
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta != null) {
+            meta.setCustomModelData(validItemCustomModelData);
+            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', validItemName));
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 
     private void loadConfig() {
         saveDefaultConfig();
-        guiTitle = getConfig().getString("messages.gui_title", "Submit Crypt");
-        submitButtonText = getConfig().getString("messages.submit_button", "Submit");
-        noDiamondsMessage = getConfig().getString("messages.no_diamonds", "Tidak ada crypt yang dikirimkan. Harap masukkan crypt terlebih dahulu.");
-        submitSuccessMessage = getConfig().getString("messages.submit_success", "You submitted %crypt% %valid_item_name% and received the equivalent balance.");
-        reloadSuccessMessage = getConfig().getString("messages.reload_success", "Plugin configuration reloaded successfully.");
-        noPermissionMessage = getConfig().getString("messages.no_permission", "You do not have permission to reload this plugin.");
-        onlyPlayersMessage = getConfig().getString("messages.only_players", "Only players can use this command.");
-        invalidNumberMessage = getConfig().getString("messages.invalid_number", "Please enter a valid number.");
-        diamondReceiveMessage = getConfig().getString("messages.diamond_receive", "You have received %crypt% %valid_item_name%!");
-        onlySpecialDiamondMessage = getConfig().getString("messages.only_special_diamond", "Only %valid_item_name% can be inserted.");
-
-        validItemMaterial = Material.getMaterial(getConfig().getString("diamond.material", "DIAMOND"));
-        validItemCustomModelData = getConfig().getInt("diamond.custom_model_data", 5000);
-        validItemName = getConfig().getString("diamond.display_name", "Crypt");
+        guiTitle = getConfig().getString("gui.title");
+        submitButtonText = getConfig().getString("items.submit_button.name");
+        noDiamondsMessage = getConfig().getString("messages.no_diamonds_message");
+        submitSuccessMessage = getConfig().getString("messages.submit_success_message");
+        reloadSuccessMessage = getConfig().getString("messages.reload_success_message");
+        noPermissionMessage = getConfig().getString("messages.no_permission_message");
+        onlyPlayersMessage = getConfig().getString("messages.only_players_message");
+        invalidNumberMessage = getConfig().getString("messages.invalid_number_message");
+        diamondReceiveMessage = getConfig().getString("messages.diamond_receive_message");
+        onlySpecialDiamondMessage = getConfig().getString("messages.only_special_diamond_message");
+        validItemMaterial = Material.valueOf(getConfig().getString("items.valid_item.material"));
+        validItemCustomModelData = getConfig().getInt("items.valid_item.custom_model_data");
+        validItemName = getConfig().getString("items.valid_item.name");
     }
 }
