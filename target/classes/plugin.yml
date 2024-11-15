@@ -9,6 +9,9 @@ commands:
     aliases: [vc]
 
 permissions:
-  valkycraft.reload:
+  valkycurrency.reload:
+    description: Allows the player to reload the plugin configuration.
+    default: op
+  valkycurrency.give:
     description: Allows the player to reload the plugin configuration.
     default: op
