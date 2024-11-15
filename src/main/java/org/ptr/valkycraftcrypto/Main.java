@@ -11,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -185,15 +186,77 @@ public class Main extends JavaPlugin implements Listener {
         Player player = (Player) event.getWhoClicked();
         Inventory gui = playerInventories.get(player);
 
+        // Pastikan event ini hanya berjalan untuk top inventory
         if (event.getView().getTopInventory().equals(event.getClickedInventory())) {
             int slot = event.getSlot();
+
+            // Cek apakah slot yang diklik adalah slot 11-15
             if (slot >= 11 && slot <= 15) {
-                ItemStack currentItem = event.getCursor();
+                ItemStack currentItem = event.getCursor(); // Ambil item yang ada di cursor (item yang dibawa pemain)
+
                 if (currentItem != null && currentItem.getType() == validItemMaterial) {
                     ItemMeta meta = currentItem.getItemMeta();
+                    // Pastikan item memiliki CustomModelData yang valid
                     if (meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == validItemCustomModelData) {
-                        event.setCancelled(false);
+                        event.setCancelled(false); // Biarkan item dimasukkan ke dalam slot
                     } else {
+                        event.setCancelled(true);
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', onlySpecialDiamondMessage));
+                    }
+                } else {
+                    event.setCancelled(true);
+                }
+            }
+            // Cek untuk tombol submit di slot 35
+            else if (slot == 35) {
+                event.setCancelled(true); // Jangan biarkan pemain mengklik submit tombol jika tidak valid
+                processSubmit(player, gui); // Proses pengiriman atau submit item
+            }
+            // Cegah klik di slot lain selain 11-15 dan 35
+            else {
+                event.setCancelled(true);
+            }
+            if ((slot >= 0 && slot <= 10) || (slot >= 17 && slot <= 35)) {
+                event.setCancelled(true);
+            }
+
+
+            // Cegah pengambilan item yang valid hanya jika item tersebut valid di slot 11-15
+            if (slot >= 11 && slot <= 15) {
+                ItemStack itemInSlot = event.getClickedInventory().getItem(slot);
+                if (itemInSlot != null && itemInSlot.getType() == validItemMaterial) {
+                    ItemMeta meta = itemInSlot.getItemMeta();
+                    // Pastikan item valid berdasarkan CustomModelData
+                    if (meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == validItemCustomModelData) {
+                        event.setCancelled(false); // Izinkan item untuk diambil
+                    } else {
+                        event.setCancelled(true); // Cegah pengambilan item jika tidak valid
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', onlySpecialDiamondMessage));
+                    }
+                }
+            }
+        }
+    }
+    @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+        Player player = (Player) event.getWhoClicked();
+        Inventory gui = playerInventories.get(player);
+
+        if (gui == null) return;
+
+        // Pastikan event hanya berlaku pada inventory GUI
+        if (event.getView().getTopInventory().equals(event.getInventory())) {
+
+            // Ambil item yang sedang didrag
+            ItemStack draggedItem = event.getOldCursor();
+
+            if (draggedItem != null && draggedItem.getType() == validItemMaterial) {
+                ItemMeta meta = draggedItem.getItemMeta();
+
+                // Pastikan item memiliki CustomModelData yang valid
+                if (meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == validItemCustomModelData) {
+                    // Cegah drag item ke luar slot yang diizinkan
+                    if (event.getRawSlots().stream().anyMatch(slot -> slot < 11 || slot > 15)) {
                         event.setCancelled(true);
                         player.sendMessage(ChatColor.translateAlternateColorCodes('&', onlySpecialDiamondMessage));
                     }
@@ -201,14 +264,13 @@ public class Main extends JavaPlugin implements Listener {
                     event.setCancelled(true);
                     player.sendMessage(ChatColor.translateAlternateColorCodes('&', onlySpecialDiamondMessage));
                 }
-            } else if (slot == 35) {
-                event.setCancelled(true);
-                processSubmit(player, gui);
             } else {
+                // Jika item yang didrag tidak sesuai, batalkan event
                 event.setCancelled(true);
             }
         }
     }
+
 
     private void processSubmit(Player player, Inventory gui) {
         int total = 0;
