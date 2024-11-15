@@ -3,15 +3,12 @@ version: '1.0-SNAPSHOT'
 main: org.ptr.valkycraftcrypto.Main
 api-version: '1.21'
 commands:
-  valkycurrency:
-    description: Main command for the ValkycraftCurrency plugin.
-    usage: /valkycraft <open|reload|give>
+  valkycraft:
+    description: Main command for the ValkycraftCrypto plugin.
+    usage: /valkycraft <open|reload|diamond>
     aliases: [vc]
 
 permissions:
-  valkycurrency.reload:
-    description: Allows the player to reload the plugin configuration.
-    default: op
-  valkycurrency.give:
+  valkycraft.reload:
     description: Allows the player to reload the plugin configuration.
     default: op

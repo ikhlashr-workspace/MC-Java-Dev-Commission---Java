@@ -1,18 +1,18 @@
-guiTitle: '&6ValkyCraft Crypto'
-submitButtonText: '&aSubmit'
-noDiamondsMessage: '&cNo diamonds in slots!'
-submitSuccessMessage: '&aTransaction successful!'
-reloadSuccessMessage: '&aPlugin reloaded!'
-noPermissionMessage: '&cYou do not have permission!'
-onlyPlayersMessage: '&cThis command can only be run by players.'
-invalidNumberMessage: '&cInvalid number specified.'
-diamondReceiveMessage: '&aYou received %crypt% %valid_item_name%!'
-onlySpecialDiamondMessage: '&cThis is not a valid %valid_item_name%.'
 
-validItem:
-  material: 'DIAMOND'
-  customModelData: 1
-  name: '&bSpecial Crypt Item'
-  lore:
-    - '&7A special crypt item for ValkyCraft!'
-    - '&7Use it wisely.'
+messages:
+  gui_title: "Submit Diamonds"  # Judul GUI
+  submit_button: "Submit"  # Nama tombol submit
+  no_diamonds: "Tidak ada crypt yang dikirimkan. Harap masukkan crypt terlebih dahulu."  # Pesan jika tidak ada crypt
+  submit_success: "You submitted %crypt% %valid_item_name% and received the equivalent balance."
+  reload_success: "Plugin configuration reloaded successfully."  # Pesan setelah reload konfigurasi
+  no_permission: "You do not have permission to reload this plugin."  # Pesan jika tidak punya hak akses
+  only_players: "Only players can use this command."  # Pesan jika bukan player
+  invalid_number: "Please enter a valid number."  # Pesan jika angka tidak valid
+  diamond_receive: "You have received %crypt% %valid_item_name%!"  # Pesan ketika menerima crypt
+  only_special_diamond: "Only %valid_item_name% can be inserted."  # Pesan jika bukan crypt khusus
+
+
+diamond:
+  material: "DIAMOND"  # Material diamond yang digunakan
+  custom_model_data: 5000  # Custom Model Data untuk diamond
+  display_name: "Special Diamond"  # Display Name untuk diamond

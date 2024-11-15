@@ -14,9 +14,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import net.md_5.bungee.api.ChatColor;
-
-import java.util.List;
 
 public class Main extends JavaPlugin implements Listener {
 
@@ -34,23 +31,13 @@ public class Main extends JavaPlugin implements Listener {
     private Material validItemMaterial;
     private int validItemCustomModelData;
     private String validItemName;
-    private List<String> validItemLore;  // List to hold lore lines
 
     private ItemStack createCustomItem() {
         ItemStack customItem = new ItemStack(validItemMaterial);
         ItemMeta meta = customItem.getItemMeta();
         if (meta != null) {
-            // Apply color codes to the item name and lore
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', validItemName));
-
+            meta.setDisplayName(validItemName);
             meta.setCustomModelData(validItemCustomModelData);
-            // Set lore from config with color codes
-            if (validItemLore != null && !validItemLore.isEmpty()) {
-                List<String> coloredLore = validItemLore.stream()
-                        .map(line -> ChatColor.translateAlternateColorCodes('&', line))
-                        .toList();
-                meta.setLore(coloredLore);
-            }
             customItem.setItemMeta(meta);
         }
         return customItem;
@@ -72,9 +59,9 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("valkycurrency")) {
+        if (command.getName().equalsIgnoreCase("valkycraft")) {
             if (args.length == 0) {
-                sender.sendMessage("Usage: /valkycurrency <open|reload|give>");
+                sender.sendMessage("Usage: /valkycraft <open|reload|crypt>");
                 return true;
             }
 
@@ -84,44 +71,37 @@ public class Main extends JavaPlugin implements Listener {
                     openCryptSubmitGUI(player);
                     return true;
                 } else {
-                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', onlyPlayersMessage));
+                    sender.sendMessage(onlyPlayersMessage);
                     return true;
                 }
             }
 
             if (args[0].equalsIgnoreCase("reload")) {
-                if (sender.hasPermission("valkycurrency.reload")) {
+                if (sender.hasPermission("valkycraft.reload")) {
                     reloadConfig();
                     loadConfig();
-                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', reloadSuccessMessage));
+                    sender.sendMessage(reloadSuccessMessage);
                     return true;
                 } else {
-                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', noPermissionMessage));
+                    sender.sendMessage(noPermissionMessage);
                     return false;
                 }
             }
 
-            if (args[0].equalsIgnoreCase("give")) {
+            if (args[0].equalsIgnoreCase("crypt")) {
                 if (sender instanceof Player) {
                     Player player = (Player) sender;
-
-                    // Check if the player has the required permission
-                    if (!player.hasPermission("valkycurrency.give")) {
-                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "You do not have permission to use this command."));
-                        return true;
-                    }
-
-                    int jumlah = 1; // Default jumlah 1 if no second argument is given
+                    int jumlah = 1; // Default jumlah 1 jika tidak ada argumen kedua
 
                     if (args.length > 1) {
                         try {
                             jumlah = Integer.parseInt(args[1]);
                             if (jumlah <= 0) {
-                                player.sendMessage(ChatColor.translateAlternateColorCodes('&', invalidNumberMessage));
+                                player.sendMessage(invalidNumberMessage);
                                 return true;
                             }
                         } catch (NumberFormatException e) {
-                            player.sendMessage(ChatColor.translateAlternateColorCodes('&', invalidNumberMessage));
+                            player.sendMessage(invalidNumberMessage);
                             return true;
                         }
                     }
@@ -130,54 +110,10 @@ public class Main extends JavaPlugin implements Listener {
                     customItem.setAmount(jumlah);
                     player.getInventory().addItem(customItem);
 
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', diamondReceiveMessage)
-                            .replace("%crypt%", String.valueOf(jumlah))
-                            .replace("%valid_item_name%", validItemName));
-                    return true;
-                } else if (sender instanceof ConsoleCommandSender) {
-                    ConsoleCommandSender console = (ConsoleCommandSender) sender;
-                    int jumlah = 1; // Default jumlah 1 if no second argument is given
-
-                    if (args.length > 1) {
-                        try {
-                            jumlah = Integer.parseInt(args[1]);
-                            if (jumlah <= 0) {
-                                console.sendMessage(ChatColor.translateAlternateColorCodes('&', invalidNumberMessage));
-                                return true;
-                            }
-                        } catch (NumberFormatException e) {
-                            console.sendMessage(ChatColor.translateAlternateColorCodes('&', invalidNumberMessage));
-                            return true;
-                        }
-                    }
-
-                    if (args.length > 2) {
-                        Player targetPlayer = Bukkit.getPlayer(args[2]); // Assuming the third argument is the player's name
-                        if (targetPlayer != null) {
-                            // Check if the target player has permission before giving the item
-                            if (!targetPlayer.hasPermission("valkycurrency.give")) {
-                                console.sendMessage(ChatColor.translateAlternateColorCodes('&', "Player does not have permission to receive the item."));
-                                return true;
-                            }
-
-                            ItemStack customItem = createCustomItem();
-                            customItem.setAmount(jumlah);
-                            targetPlayer.getInventory().addItem(customItem);
-
-                            targetPlayer.sendMessage(ChatColor.translateAlternateColorCodes('&', diamondReceiveMessage)
-                                    .replace("%crypt%", String.valueOf(jumlah))
-                                    .replace("%valid_item_name%", validItemName));
-                            console.sendMessage("Gave " + jumlah + " " + validItemName + " to " + targetPlayer.getName());
-                        } else {
-                            console.sendMessage(ChatColor.translateAlternateColorCodes('&', "Player not found."));
-                        }
-                    } else {
-                        console.sendMessage(ChatColor.translateAlternateColorCodes('&', "You must specify a player name."));
-                    }
-
+                    player.sendMessage(diamondReceiveMessage.replace("%crypt%", String.valueOf(jumlah)).replace("%valid_item_name%", validItemName));
                     return true;
                 } else {
-                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', onlyPlayersMessage));
+                    sender.sendMessage(onlyPlayersMessage);
                     return true;
                 }
             }
@@ -187,12 +123,12 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     private void openCryptSubmitGUI(Player player) {
-        gui = Bukkit.createInventory(null, 4 * 9, ChatColor.translateAlternateColorCodes('&', guiTitle));
+        gui = Bukkit.createInventory(null, 4 * 9, guiTitle);
 
         // Set submit button in slot 16
         ItemStack submitItem = new ItemStack(Material.EMERALD);
         ItemMeta meta = submitItem.getItemMeta();
-        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', submitButtonText));
+        meta.setDisplayName(submitButtonText);
         submitItem.setItemMeta(meta);
         gui.setItem(16, submitItem);
 
@@ -221,11 +157,11 @@ public class Main extends JavaPlugin implements Listener {
                         event.setCancelled(false); // Allow valid item
                     } else {
                         event.setCancelled(true);
-                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', onlySpecialDiamondMessage.replace("%valid_item_name%", validItemName)));
+                        player.sendMessage(onlySpecialDiamondMessage.replace("%valid_item_name%", validItemName));
                     }
                 } else {
                     event.setCancelled(true);
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', onlySpecialDiamondMessage.replace("%valid_item_name%", validItemName)));
+                    player.sendMessage(onlySpecialDiamondMessage.replace("%valid_item_name%", validItemName));
                 }
             }
             if ((slot >= 0 && slot <= 10) || (slot >= 17 && slot <= 35)) {
@@ -247,12 +183,18 @@ public class Main extends JavaPlugin implements Listener {
                 }
 
                 if (cryptCount == 0) {
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', noDiamondsMessage)); // No crypts added
+                    player.sendMessage(noDiamondsMessage); // No crypts added
                 } else {
                     ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();
-                    console.sendMessage(ChatColor.translateAlternateColorCodes('&', submitSuccessMessage));
-                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', submitSuccessMessage));
-                    player.getInventory().addItem(new ItemStack(Material.DIAMOND, cryptCount)); // Reward player with diamonds
+                    String command = "eco give " + player.getName() + " " + cryptCount;
+                    Bukkit.dispatchCommand(console, command);
+
+                    // Replace the %crypt% and %valid_item_name% placeholders in the success message
+                    String successMessage = submitSuccessMessage
+                            .replace("%crypt%", String.valueOf(cryptCount))  // Replace %crypt% with the count
+                            .replace("%valid_item_name%", validItemName);   // Replace %valid_item_name% with the item name
+
+                    player.sendMessage(successMessage);
                 }
             }
         }
@@ -260,32 +202,38 @@ public class Main extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        // Clean up GUI when it’s closed
         if (event.getInventory().equals(gui)) {
-            gui = null;
+            Player player = (Player) event.getPlayer();
+
+            for (int i = 11; i <= 15; i++) {
+                ItemStack item = gui.getItem(i);
+                if (item != null && item.getType() == validItemMaterial) {
+                    ItemMeta meta = item.getItemMeta();
+                    if (meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == validItemCustomModelData) {
+                        player.getInventory().addItem(item);
+                    }
+                }
+            }
+
+            gui.clear();
         }
     }
 
     private void loadConfig() {
-        // Load settings from configuration
-        getConfig().options().copyDefaults(true);
-        saveConfig();
+        saveDefaultConfig();
+        guiTitle = getConfig().getString("messages.gui_title", "Submit Crypt");
+        submitButtonText = getConfig().getString("messages.submit_button", "Submit");
+        noDiamondsMessage = getConfig().getString("messages.no_diamonds", "Tidak ada crypt yang dikirimkan. Harap masukkan crypt terlebih dahulu.");
+        submitSuccessMessage = getConfig().getString("messages.submit_success", "You submitted %crypt% %valid_item_name% and received the equivalent balance.");
+        reloadSuccessMessage = getConfig().getString("messages.reload_success", "Plugin configuration reloaded successfully.");
+        noPermissionMessage = getConfig().getString("messages.no_permission", "You do not have permission to reload this plugin.");
+        onlyPlayersMessage = getConfig().getString("messages.only_players", "Only players can use this command.");
+        invalidNumberMessage = getConfig().getString("messages.invalid_number", "Please enter a valid number.");
+        diamondReceiveMessage = getConfig().getString("messages.diamond_receive", "You have received %crypt% %valid_item_name%!");
+        onlySpecialDiamondMessage = getConfig().getString("messages.only_special_diamond", "Only %valid_item_name% can be inserted.");
 
-        guiTitle = getConfig().getString("guiTitle", "ValkyCraft Crypto");
-        submitButtonText = getConfig().getString("submitButtonText", "Submit");
-        noDiamondsMessage = getConfig().getString("noDiamondsMessage", "&cNo diamonds in slots!");
-        submitSuccessMessage = getConfig().getString("submitSuccessMessage", "&aTransaction successful!");
-        reloadSuccessMessage = getConfig().getString("reloadSuccessMessage", "&aPlugin reloaded!");
-        noPermissionMessage = getConfig().getString("noPermissionMessage", "&cYou do not have permission!");
-        onlyPlayersMessage = getConfig().getString("onlyPlayersMessage", "&cThis command can only be run by players.");
-        invalidNumberMessage = getConfig().getString("invalidNumberMessage", "&cInvalid number specified.");
-        diamondReceiveMessage = getConfig().getString("diamondReceiveMessage", "&aYou received %crypt% %valid_item_name%!");
-        onlySpecialDiamondMessage = getConfig().getString("onlySpecialDiamondMessage", "&cThis is not a valid %valid_item_name%.");
-
-        // Item properties
-        validItemMaterial = Material.getMaterial(getConfig().getString("validItem.material", "DIAMOND"));
-        validItemCustomModelData = getConfig().getInt("validItem.customModelData", 1);
-        validItemName = getConfig().getString("validItem.name", "&bSpecial Crypt Item");
-        validItemLore = getConfig().getStringList("validItem.lore");
+        validItemMaterial = Material.getMaterial(getConfig().getString("diamond.material", "DIAMOND"));
+        validItemCustomModelData = getConfig().getInt("diamond.custom_model_data", 5000);
+        validItemName = getConfig().getString("diamond.display_name", "Crypt");
     }
 }
