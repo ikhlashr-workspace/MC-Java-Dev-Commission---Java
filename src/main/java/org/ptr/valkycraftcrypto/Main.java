@@ -59,9 +59,9 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("valkycraft")) {
+        if (command.getName().equalsIgnoreCase("valkycrypt")) {
             if (args.length == 0) {
-                sender.sendMessage("Usage: /valkycraft <open|reload|crypt>");
+                sender.sendMessage("Usage: /valkycrypt <open|reload|give>");
                 return true;
             }
 
@@ -88,7 +88,7 @@ public class Main extends JavaPlugin implements Listener {
                 }
             }
 
-            if (args[0].equalsIgnoreCase("crypt")) {
+            if (args[0].equalsIgnoreCase("give")) {
                 if (sender instanceof Player) {
                     Player player = (Player) sender;
                     int jumlah = 1; // Default jumlah 1 jika tidak ada argumen kedua
@@ -131,12 +131,6 @@ public class Main extends JavaPlugin implements Listener {
         meta.setDisplayName(submitButtonText);
         submitItem.setItemMeta(meta);
         gui.setItem(16, submitItem);
-
-        // Set valid item in slots 11-15
-        ItemStack validItem = createCustomItem();
-        for (int i = 11; i <= 15; i++) {
-            gui.setItem(i, validItem);
-        }
 
         player.openInventory(gui);
     }
