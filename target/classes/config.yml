@@ -1,0 +1,12 @@
+messages:
+  gui_title: "Submit Diamonds"
+  submit_button: "Submit"
+  no_diamonds: "Tidak ada diamond yang dikirimkan. Harap masukkan diamond terlebih dahulu."
+  submit_success: "Anda telah mengirimkan %diamonds% diamond dan menerima saldo yang setara."
+  reload_success: "Konfigurasi plugin berhasil dimuat ulang."
+  no_permission: "Anda tidak memiliki izin untuk memuat ulang plugin ini."
+  invalid_amount: "Harap masukkan angka yang valid untuk jumlah."
+  player_only: "Hanya pemain yang dapat menggunakan perintah ini."
+  diamond_received: "Anda telah menerima %jumlah% Special Diamond!"
+  slot_restricted: "Hanya Special Diamond yang dapat dimasukkan."
+  usage_message: "Usage: /valkycraft <open|reload|diamond>"

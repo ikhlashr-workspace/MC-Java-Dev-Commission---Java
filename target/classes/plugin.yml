@@ -1,0 +1,14 @@
+name: valkycraftcrypto
+version: '1.0-SNAPSHOT'
+main: org.ptr.valkycraftcrypto.Main
+api-version: '1.21'
+commands:
+  valkycraft:
+    description: Main command for the ValkycraftCrypto plugin.
+    usage: /valkycraft <open|reload|diamond>
+    aliases: [vc]
+
+permissions:
+  valkycraft.reload:
+    description: Allows the player to reload the plugin configuration.
+    default: op
