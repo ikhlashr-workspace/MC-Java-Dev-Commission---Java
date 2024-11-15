@@ -28,14 +28,19 @@ public class Main extends JavaPlugin implements Listener {
     private String invalidNumberMessage;
     private String diamondReceiveMessage;
     private String onlySpecialDiamondMessage;
+    private Material validItemMaterial;
+    private int validItemCustomModelData;
+    private String validItemName;
 
-    private ItemStack createCustomDiamond() {
-        ItemStack customDiamond = new ItemStack(Material.DIAMOND);
-        ItemMeta meta = customDiamond.getItemMeta();
-        meta.setDisplayName("Special Diamond");
-        meta.setCustomModelData(5000); // Menetapkan Custom Model Data
-        customDiamond.setItemMeta(meta);
-        return customDiamond;
+    private ItemStack createCustomItem() {
+        ItemStack customItem = new ItemStack(validItemMaterial);
+        ItemMeta meta = customItem.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(validItemName);
+            meta.setCustomModelData(validItemCustomModelData);
+            customItem.setItemMeta(meta);
+        }
+        return customItem;
     }
 
     @Override
@@ -56,14 +61,14 @@ public class Main extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equalsIgnoreCase("valkycraft")) {
             if (args.length == 0) {
-                sender.sendMessage("Usage: /valkycraft <open|reload|diamond>");
+                sender.sendMessage("Usage: /valkycraft <open|reload|crypt>");
                 return true;
             }
 
             if (args[0].equalsIgnoreCase("open")) {
                 if (sender instanceof Player) {
                     Player player = (Player) sender;
-                    openDiamondSubmitGUI(player);
+                    openCryptSubmitGUI(player);
                     return true;
                 } else {
                     sender.sendMessage(onlyPlayersMessage);
@@ -83,7 +88,7 @@ public class Main extends JavaPlugin implements Listener {
                 }
             }
 
-            if (args[0].equalsIgnoreCase("diamond")) {
+            if (args[0].equalsIgnoreCase("crypt")) {
                 if (sender instanceof Player) {
                     Player player = (Player) sender;
                     int jumlah = 1; // Default jumlah 1 jika tidak ada argumen kedua
@@ -101,11 +106,11 @@ public class Main extends JavaPlugin implements Listener {
                         }
                     }
 
-                    ItemStack customDiamond = createCustomDiamond();
-                    customDiamond.setAmount(jumlah);
-                    player.getInventory().addItem(customDiamond);
+                    ItemStack customItem = createCustomItem();
+                    customItem.setAmount(jumlah);
+                    player.getInventory().addItem(customItem);
 
-                    player.sendMessage(diamondReceiveMessage.replace("%diamonds%", String.valueOf(jumlah)));
+                    player.sendMessage(diamondReceiveMessage.replace("%crypt%", String.valueOf(jumlah)).replace("%valid_item_name%", validItemName));
                     return true;
                 } else {
                     sender.sendMessage(onlyPlayersMessage);
@@ -117,7 +122,7 @@ public class Main extends JavaPlugin implements Listener {
         return false;
     }
 
-    private void openDiamondSubmitGUI(Player player) {
+    private void openCryptSubmitGUI(Player player) {
         gui = Bukkit.createInventory(null, 4 * 9, guiTitle);
 
         // Set submit button in slot 16
@@ -126,6 +131,13 @@ public class Main extends JavaPlugin implements Listener {
         meta.setDisplayName(submitButtonText);
         submitItem.setItemMeta(meta);
         gui.setItem(16, submitItem);
+
+        // Set valid item in slots 11-15
+        ItemStack validItem = createCustomItem();
+        for (int i = 11; i <= 15; i++) {
+            gui.setItem(i, validItem);
+        }
+
         player.openInventory(gui);
     }
 
@@ -136,20 +148,20 @@ public class Main extends JavaPlugin implements Listener {
         if (event.getView().getTopInventory().equals(event.getClickedInventory())) {
             int slot = event.getSlot();
 
-            // Allow diamonds in slots 11-15 only
+            // Allow only valid items in slots 11-15
             if (slot >= 11 && slot <= 15) {
                 ItemStack currentItem = event.getCursor();
-                if (currentItem != null && currentItem.getType() == Material.DIAMOND) {
+                if (currentItem != null && currentItem.getType() == validItemMaterial) {
                     ItemMeta meta = currentItem.getItemMeta();
-                    if (meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == 5000) {
-                        event.setCancelled(false); // Izinkan item dimasukkan
+                    if (meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == validItemCustomModelData) {
+                        event.setCancelled(false); // Allow valid item
                     } else {
                         event.setCancelled(true);
-                        player.sendMessage(onlySpecialDiamondMessage);
+                        player.sendMessage(onlySpecialDiamondMessage.replace("%valid_item_name%", validItemName));
                     }
                 } else {
                     event.setCancelled(true);
-                    player.sendMessage(onlySpecialDiamondMessage);
+                    player.sendMessage(onlySpecialDiamondMessage.replace("%valid_item_name%", validItemName));
                 }
             }
             if ((slot >= 0 && slot <= 10) || (slot >= 17 && slot <= 35)) {
@@ -159,23 +171,30 @@ public class Main extends JavaPlugin implements Listener {
             if (slot == 16 && event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.EMERALD) {
                 event.setCancelled(true);
 
-                int diamondCount = 0;
+                int cryptCount = 0;
 
+                // Count the number of valid crypt items in slots 11-15
                 for (int i = 11; i <= 15; i++) {
                     ItemStack item = gui.getItem(i);
-                    if (item != null && item.getType() == Material.DIAMOND) {
-                        diamondCount += item.getAmount();
-                        gui.clear(i);
+                    if (item != null && item.getType() == validItemMaterial) {
+                        cryptCount += item.getAmount();
+                        gui.clear(i);  // Clear the slot
                     }
                 }
 
-                if (diamondCount == 0) {
-                    player.sendMessage(noDiamondsMessage);
+                if (cryptCount == 0) {
+                    player.sendMessage(noDiamondsMessage); // No crypts added
                 } else {
                     ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();
-                    String command = "eco give " + player.getName() + " " + diamondCount;
+                    String command = "eco give " + player.getName() + " " + cryptCount;
                     Bukkit.dispatchCommand(console, command);
-                    player.sendMessage(submitSuccessMessage.replace("%diamonds%", String.valueOf(diamondCount)));
+
+                    // Replace the %crypt% and %valid_item_name% placeholders in the success message
+                    String successMessage = submitSuccessMessage
+                            .replace("%crypt%", String.valueOf(cryptCount))  // Replace %crypt% with the count
+                            .replace("%valid_item_name%", validItemName);   // Replace %valid_item_name% with the item name
+
+                    player.sendMessage(successMessage);
                 }
             }
         }
@@ -188,9 +207,9 @@ public class Main extends JavaPlugin implements Listener {
 
             for (int i = 11; i <= 15; i++) {
                 ItemStack item = gui.getItem(i);
-                if (item != null && item.getType() == Material.DIAMOND) {
+                if (item != null && item.getType() == validItemMaterial) {
                     ItemMeta meta = item.getItemMeta();
-                    if (meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == 5000) {
+                    if (meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == validItemCustomModelData) {
                         player.getInventory().addItem(item);
                     }
                 }
@@ -202,15 +221,19 @@ public class Main extends JavaPlugin implements Listener {
 
     private void loadConfig() {
         saveDefaultConfig();
-        guiTitle = getConfig().getString("messages.gui_title", "Submit Diamonds");
+        guiTitle = getConfig().getString("messages.gui_title", "Submit Crypt");
         submitButtonText = getConfig().getString("messages.submit_button", "Submit");
-        noDiamondsMessage = getConfig().getString("messages.no_diamonds", "Tidak ada diamond yang dikirimkan. Harap masukkan diamond terlebih dahulu.");
-        submitSuccessMessage = getConfig().getString("messages.submit_success", "You submitted %diamonds% diamonds and received the equivalent balance.");
+        noDiamondsMessage = getConfig().getString("messages.no_diamonds", "Tidak ada crypt yang dikirimkan. Harap masukkan crypt terlebih dahulu.");
+        submitSuccessMessage = getConfig().getString("messages.submit_success", "You submitted %crypt% %valid_item_name% and received the equivalent balance.");
         reloadSuccessMessage = getConfig().getString("messages.reload_success", "Plugin configuration reloaded successfully.");
         noPermissionMessage = getConfig().getString("messages.no_permission", "You do not have permission to reload this plugin.");
         onlyPlayersMessage = getConfig().getString("messages.only_players", "Only players can use this command.");
         invalidNumberMessage = getConfig().getString("messages.invalid_number", "Please enter a valid number.");
-        diamondReceiveMessage = getConfig().getString("messages.diamond_receive", "You have received %diamonds% Special Diamonds!");
-        onlySpecialDiamondMessage = getConfig().getString("messages.only_special_diamond", "Only Special Diamonds can be inserted.");
+        diamondReceiveMessage = getConfig().getString("messages.diamond_receive", "You have received %crypt% %valid_item_name%!");
+        onlySpecialDiamondMessage = getConfig().getString("messages.only_special_diamond", "Only %valid_item_name% can be inserted.");
+
+        validItemMaterial = Material.getMaterial(getConfig().getString("diamond.material", "DIAMOND"));
+        validItemCustomModelData = getConfig().getInt("diamond.custom_model_data", 5000);
+        validItemName = getConfig().getString("diamond.display_name", "Crypt");
     }
 }
