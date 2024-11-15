@@ -1,38 +1,18 @@
-# Config for ValkyCraft Crypto Plugin
 
-# GUI settings
-gui:
-  title: "&6ValkyCraft Crypt GUI"  # Judul GUI dengan kode warna
-
-# Items Configuration
-items:
-  valid_item:
-    material: "DIAMOND"  # Material item yang valid
-    custom_model_data: 1  # Custom Model Data untuk item valid
-    name: "&bSpecial Diamond"  # Nama item dengan kode warna
-    lore:
-      - "&7This is a special diamond."
-      - "&eUse this item in the crypt."
-  submit_button:
-    material: "STONE_BUTTON"  # Material untuk tombol submit
-    custom_model_data: 0  # Custom Model Data untuk tombol submit
-    name: "&aSubmit"  # Nama tombol dengan kode warna
-    lore:
-      - "&7Click to submit your items."
-      - "&eThis will exchange your diamonds for credits."
-
-# Messages Configuration
 messages:
-  no_diamonds_message: "&cYou need to put diamonds in the slots!"
-  submit_success_message: "&aSuccessfully submitted &b%crypt% &7diamond(s)."
-  reload_success_message: "&aPlugin reloaded successfully!"
-  no_permission_message: "&cYou do not have permission to reload the plugin."
-  only_players_message: "&cThis command can only be executed by players."
-  invalid_number_message: "&cInvalid number entered. Please provide a valid number."
-  diamond_receive_message: "&7You received &b%crypt% &adiamond(s)!"
-  only_special_diamond_message: "&cOnly special diamonds can be used in this GUI! Please use the correct item."
+  gui_title: "Submit Diamonds"  # Judul GUI
+  submit_button: "Submit"  # Nama tombol submit
+  no_diamonds: "Tidak ada crypt yang dikirimkan. Harap masukkan crypt terlebih dahulu."  # Pesan jika tidak ada crypt
+  submit_success: "You submitted %crypt% %valid_item_name% and received the equivalent balance."
+  reload_success: "Plugin configuration reloaded successfully."  # Pesan setelah reload konfigurasi
+  no_permission: "You do not have permission to reload this plugin."  # Pesan jika tidak punya hak akses
+  only_players: "Only players can use this command."  # Pesan jika bukan player
+  invalid_number: "Please enter a valid number."  # Pesan jika angka tidak valid
+  diamond_receive: "You have received %crypt% %valid_item_name%!"  # Pesan ketika menerima crypt
+  only_special_diamond: "Only %valid_item_name% can be inserted."  # Pesan jika bukan crypt khusus
 
-# Configuration for Slots
-slots:
-  valid_item_slots: 11-15  # Slot untuk item yang valid (Diamond)
-  submit_button_slot: 16  # Slot untuk tombol submit
+
+diamond:
+  material: "DIAMOND"  # Material diamond yang digunakan
+  custom_model_data: 5000  # Custom Model Data untuk diamond
+  display_name: "Special Diamond"  # Display Name untuk diamond
