@@ -3,9 +3,9 @@ version: '1.0-SNAPSHOT'
 main: org.ptr.valkycraftcrypto.Main
 api-version: '1.21'
 commands:
-  valkycrypt:
+  valkycraft:
     description: Main command for the ValkycraftCrypto plugin.
-    usage: /valkycrypt <open|reload|diamond>
+    usage: /valkycraft <open|reload|diamond>
     aliases: [vc]
 
 permissions:
