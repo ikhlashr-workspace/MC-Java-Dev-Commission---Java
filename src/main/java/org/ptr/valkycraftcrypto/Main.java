@@ -43,6 +43,11 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
+            getLogger().severe("PlaceholderAPI is not installed or not enabled. Plugin cannot work properly!");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         Bukkit.getPluginManager().registerEvents(this, this);
         loadConfig();
         getLogger().info("Plugin enabled!");
@@ -152,7 +157,12 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     private void openCryptSubmitGUI(Player player) {
-        Inventory gui = Bukkit.createInventory(null, 4 * 9, ChatColor.translateAlternateColorCodes('&', guiTitle));
+        // Process the GUI title with PlaceholderAPI support
+        Inventory gui = Bukkit.createInventory(
+                null,
+                4 * 9,
+                ChatColor.translateAlternateColorCodes('&', PlaceholderUtil.applyPlaceholders(player, guiTitle))
+        );
 
         // Submit button
         ItemStack submitItem = createSubmitButton();
@@ -162,6 +172,7 @@ public class Main extends JavaPlugin implements Listener {
         playerInventories.put(player, gui);
         player.openInventory(gui);
     }
+
 
     private ItemStack createSubmitButton() {
         ItemStack item = new ItemStack(Material.valueOf(getConfig().getString("items.submit_button.material")));

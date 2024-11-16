@@ -2,6 +2,8 @@ name: valkycraftcrypto
 version: '1.0-SNAPSHOT'
 main: org.ptr.valkycraftcrypto.Main
 api-version: '1.21'
+depend: [PlaceholderAPI]
+
 commands:
   valkycraft:
     description: Main command for the ValkycraftCrypto plugin.
